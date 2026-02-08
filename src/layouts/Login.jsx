@@ -1,23 +1,30 @@
 import {
   GithubAuthProvider,
   GoogleAuthProvider,
+  signInWithEmailAndPassword,
   signInWithPopup,
+  signOut,
 } from "firebase/auth";
 import { auth } from "../firebase.init";
 import { useState } from "react";
 
 const Login = () => {
   const [user, setUser] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
+
+
+
 
   const handleGithubSign = () => {
     const provider = new GithubAuthProvider();
     signInWithPopup(auth, provider)
       .then((result) => {
+        const user = result.user;
         console.log(result.user);
-        setUser(result.user);
+        setUser(user);
       })
       .catch((error) => {
-        console.log(error);
+        setErrorMessage(error.message)
       });
   };
   const handleGoogleLogin = () => {
@@ -28,9 +35,34 @@ const Login = () => {
         setUser(result.user);
       })
       .catch((error) => {
-        console.log(error);
+        setErrorMessage(error.message)
       });
   };
+
+  const handleLogin = (e) => {
+
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    
+    signInWithEmailAndPassword(auth, email, password)
+    .then(result=> {
+      console.log(result.user);
+    })
+    .catch(error=> {
+      setErrorMessage(error.message)
+    })
+  }
+
+  const handleSignOut = () => {
+    signOut(auth)
+    .then(() =>{
+      setUser('')
+      
+    })
+    .catch(error => {
+      setErrorMessage(error.message)
+    })
+  }
 
   return (
     <div className="hero bg-base-200 min-h-screen">
@@ -40,17 +72,17 @@ const Login = () => {
             <h1 className="text-5xl font-bold">Login now!</h1>
             <form>
               <label className="label">Email</label>
-              <input type="email" className="input" placeholder="Email" />
+              <input type="email" name='email' className="input" placeholder="Email" />
               <label className="label">Password</label>
-              <input type="password" className="input" placeholder="Password" />
+              <input type="password" name = 'password' className="input" placeholder="Password" />
               <div>
                 <a className="link link-hover">Forgot password?</a>
               </div>
-              <button className="btn btn-neutral mt-4">Login</button>
+              <button onClick={handleLogin} className="btn btn-neutral mt-4">Login</button>
             </form>
             <h1 className="text-center">OR</h1>
             {/* google sign */}
-            <button
+            {user ?   <button onClick={handleSignOut} className="btn btn-primary">Sign Out</button> : <button
               onClick={handleGoogleLogin}
               className="btn bg-white text-black border-[#e5e5e5]"
             >
@@ -82,7 +114,7 @@ const Login = () => {
                 </g>
               </svg>
               Login with Google
-            </button>
+            </button>}
             {/* Github SignIn */}
             <button
               onClick={handleGithubSign}
@@ -103,12 +135,18 @@ const Login = () => {
               Login with GitHub
             </button>
 
+            
+
             <div>
               <h3> {user.email}</h3>
               <h3> {user.displayName}</h3>
+              <h2>{user.providerId}</h2>
+              <h2>{user.uid}</h2>
+              
               <h3>
                 <img src={user.photoURL} alt="" srcset="" />
               </h3>
+              <h4>{errorMessage}</h4>
             </div>
           </div>
         </div>
